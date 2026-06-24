@@ -1,36 +1,135 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💈 FSW Barber
 
-## Getting Started
+SaaS de agendamento para barbearias: descubra estabelecimentos, conheça os serviços oferecidos, faça reservas e avalie os atendimentos.
 
-First, run the development server:
+> ⚠️ **Status:** em desenvolvimento. A modelagem de dados, a infraestrutura e o tooling já estão prontos; a interface da aplicação ainda está sendo construída sobre o template inicial.
+
+## ✨ Funcionalidades (domínio modelado)
+
+- 👤 Usuários com autenticação (modelos compatíveis com NextAuth: `User`, `Account`, `Session`)
+- 🏪 Cadastro de barbearias com endereço, fotos, descrição e telefones
+- ✂️ Serviços por barbearia (nome, descrição, imagem e preço)
+- 📅 Agendamentos (`Booking`) com status `CONFIRMED` / `COMPLETED` / `CANCELLED`
+- ⭐ Avaliações (`Review`) vinculadas a um agendamento, com nota e comentário
+
+## 🛠️ Tecnologias
+
+| Camada        | Stack                                                                 |
+| ------------- | --------------------------------------------------------------------- |
+| Framework     | [Next.js 16](https://nextjs.org) (App Router + React Server Components)|
+| Linguagem     | [TypeScript](https://www.typescriptlang.org) (strict)                 |
+| UI            | [React 19](https://react.dev)                                         |
+| Estilo        | [Tailwind CSS v4](https://tailwindcss.com), `tw-animate-css`          |
+| Componentes   | [shadcn](https://ui.shadcn.com) (estilo `radix-nova`), Radix UI       |
+| Ícones        | [lucide-react](https://lucide.dev)                                    |
+| Utils         | `class-variance-authority`, `clsx`, `tailwind-merge`                  |
+| ORM           | [Prisma 5](https://www.prisma.io)                                     |
+| Banco         | [PostgreSQL 16](https://www.postgresql.org)                           |
+| Qualidade     | ESLint 9, Prettier, Husky, lint-staged, Commitlint (Conventional)     |
+
+## 📋 Pré-requisitos
+
+- [Node.js](https://nodejs.org) 20+ (desenvolvido com v24)
+- [Docker](https://www.docker.com) e Docker Compose (para o banco de dados)
+
+## 🚀 Começando
+
+### 1. Instale as dependências
+
+```bash
+npm install
+```
+
+### 2. Configure as variáveis de ambiente
+
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+DATABASE_URL="postgresql://admin:admin123@localhost:5432/fsw_barber"
+```
+
+> Os valores acima correspondem ao banco definido no `docker-compose.yml`.
+
+### 3. Suba o banco de dados
+
+```bash
+docker compose up -d
+```
+
+Isso inicia um PostgreSQL 16 em `localhost:5432` com o banco `fsw_barber`.
+
+### 4. Aplique as migrations
+
+```bash
+npx prisma migrate dev
+```
+
+### 5. Popule o banco
+
+Necessário para exibir conteúdo na aplicação. Cria 10 barbearias de exemplo, cada uma com seus serviços:
+
+```bash
+npx prisma db seed
+```
+
+### 6. Rode a aplicação
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📜 Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Comando             | Descrição                                          |
+| ------------------- | -------------------------------------------------- |
+| `npm run dev`       | Inicia o servidor de desenvolvimento               |
+| `npm run build`     | Gera o build de produção                           |
+| `npm run start`     | Sobe o servidor de produção (após o build)         |
+| `npm run lint`      | Roda o ESLint                                       |
+| `npx prisma studio` | Abre o Prisma Studio para inspecionar o banco      |
+| `npx prisma db seed`| Popula o banco com dados de exemplo                |
 
-## Learn More
+## 🗂️ Estrutura
 
-To learn more about Next.js, take a look at the following resources:
+```
+fsw-barber/
+├── app/                  # App Router (páginas, layouts, estilos globais)
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── globals.css
+├── prisma/
+│   ├── schema.prisma     # Modelos de dados
+│   ├── migrations/       # Histórico de migrations
+│   └── seed.ts           # Script de seed
+├── public/               # Assets estáticos
+├── docker-compose.yml    # PostgreSQL para desenvolvimento
+└── components.json       # Configuração do shadcn
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🗃️ Modelo de dados
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+User ──< Booking >── BarbershopService >── Barbershop
+  │         │                                   │
+  └──< Review ──────────────────────────────────┘
+```
 
-## Deploy on Vercel
+- **User** — pode ter vários agendamentos e avaliações
+- **Barbershop** — possui vários serviços, agendamentos e avaliações
+- **BarbershopService** — pertence a uma barbearia e pode ter agendamentos
+- **Booking** — liga usuário, serviço e barbearia em uma data, com status
+- **Review** — avaliação 1:1 de um agendamento
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔒 Padrões de desenvolvimento
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Commits:** seguem o padrão [Conventional Commits](https://www.conventionalcommits.org), validados pelo Commitlint via hook `commit-msg`.
+- **Pre-commit:** `lint-staged` roda ESLint e Prettier nos arquivos `.ts`/`.tsx` alterados.
+- **Formatação:** Prettier sem ponto e vírgula, `tabWidth: 2`, com ordenação automática de classes Tailwind.
+
+Veja [`SECURITY.md`](./SECURITY.md) para notas de segurança e auditoria de dependências.
+
+## 📄 Licença
+
+Projeto privado, para fins de estudo.
