@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: fsw_barber_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: fsw_barber
+    ports:
+      - "5432:5432"
+    volumes:
+      - fsw_barber_pgdata:/var/lib/postgresql/data
+
+volumes:
+  fsw_barber_pgdata:
